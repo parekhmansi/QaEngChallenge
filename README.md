@@ -15,6 +15,20 @@ customers total amount and verifies that application is calculating correct stat
 It is setup as a parameterized junit test with a test suite class.
 Test case iterates over the test data (each row is one test) from the test data excel file. 
 
+
+--------------------
+BUILD/RUN INSTRUCTION
+--------------------
+
+1. Important: For chrome driver path - code first checks if there is any System property set for webdriver.chrome.driver
+   If not, it tries to get the property from locator.properties file.
+
+This is a maven project with test suite class. You can run the test using below command on command line:
+
+              mvn clean test -Dtest=TaxesTestSuite
+
+It will run one test scenario with 3 different test data by selecting different state with different taxes
+
 ------------------
 SOURCE CODE
 ------------------
@@ -48,18 +62,7 @@ Property file location: src/test/resources/locator.properties
                                   
 
 
---------------------
-BUILD INSTRUCTION
---------------------
 
-1. Important: For chrome driver path - code first checks if there is any System property set for webdriver.chrome.driver
-   If not, it tries to get the property from locator.properties file.
-
-This is a maven project with test suite class. You can run the test using below command on command line:
-
-              mvn clean test -Dtest=TaxesTestSuite.java
-
-It will run one test scenario with 3 different test data by selecting different state with different taxes
 
 
 
