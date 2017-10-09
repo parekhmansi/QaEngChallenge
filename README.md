@@ -1,6 +1,8 @@
 # QaEngChallenge
 Project Name: QaEngChallenge
 
+Regression Test Cases for State Tax Feature.
+
 This test source code runs the test for jungle socks application. 
 It mainly covers the test for newly added feature to the application which adds the state tax to 
 customers total amount and verifies that application is calculating correct state tax. 
