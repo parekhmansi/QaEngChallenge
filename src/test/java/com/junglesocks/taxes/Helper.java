@@ -23,47 +23,72 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Helper {
+
+	private static Logger logger = LoggerFactory.getLogger(Helper.class);
+
 	Properties prop;
 	WebDriver driver;
 
+	/*
+	 * loads the properties file
+	 * 
+	 * @return - properties
+	 */
 	public Properties loadProperties() throws IOException {
 
 		prop = new Properties();
 
-		FileInputStream fs = new FileInputStream(
-				"/Users/kirtishparekh/Documents/workspace/Engineering Challenge/src/test/resources/locator.properties");
+		logger.debug("Loading properties file from - src/test/resources/locator.properties");
+		// enter path for excel file here.
+		FileInputStream fs = new FileInputStream("src/test/resources/locator.properties");
 		prop.load(fs);
 
 		return prop;
 	}
 
+	/*
+	 * find web element from the page by using xpath from property file.
+	 * 
+	 * @return - WebElement
+	 */
 	public WebElement findElement(String key) throws IOException {
 
-		// get xpath from property object
 		Properties prop = loadProperties();
 		String xpath = prop.getProperty(key);
-		System.out.println("XPATH for :" + key + "=" + xpath);
-
-		// find webelement with driver
+		logger.debug("XPATH value for :" + key + "=" + xpath);
 
 		WebElement element = driver.findElement(By.xpath(xpath));
-
-		// retrun element
 
 		return element;
 	}
 
+	/*
+	 * create chrome driver object of web driver
+	 */
 	public WebDriver createDriver() {
 
-		System.setProperty("webdriver.chrome.driver", "/Users/kirtishparekh/Downloads/chromedriver 2");
+		//get the property from properties file if it is not already set
+		if(System.getProperty("webdriver.chrome.driver") == null){
+			System.setProperty("webdriver.chrome.driver", prop.getProperty("webdriver.chrome.driver"));
+		}
 		driver = new ChromeDriver();
-		driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+
+		// set implicit wait to make the test visible while run.
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 		return driver;
 
 	}
 
+	/*
+	 * replace "$" sign with empty string and convert variable from string to
+	 * double
+	 * 
+	 * @return - Double
+	 */
 	public Double covertStringToDouble(String s) throws Exception {
 
 		String total = s.replaceAll("\\$", "");
@@ -72,19 +97,27 @@ public class Helper {
 
 	}
 
+	/*
+	 * calculate taxes for expected result
+	 * 
+	 * @return - Double
+	 */
 	public Double calculateTaxes(Double amount, Double tax) throws Exception {
 
-		System.out.println("amount -"+ amount + ": tax -"+ tax); 
-		
-		Double taxes = (amount * tax) ;
+		logger.debug("Calculate tax for - amount -" + amount + ": tax -" + tax);
 
-		Double taxAmt = BigDecimal.valueOf(taxes)
-			    .setScale(3, RoundingMode.HALF_UP)
-			    .doubleValue();
+		Double taxes = (amount * tax);
+
+		Double taxAmt = BigDecimal.valueOf(taxes).setScale(3, RoundingMode.HALF_UP).doubleValue();
 
 		return taxAmt;
 	}
 
+	/*
+	 * load test data excel file
+	 * 
+	 * @return - List<Map<String, String>>
+	 */
 	public List<Map<String, String>> loadExcelData() throws IOException {
 
 		Workbook workbook = null;
@@ -92,19 +125,14 @@ public class Helper {
 		List<Map<String, String>> excelData = null;
 
 		try {
-			String excelFilePath = "/Users/kirtishparekh/Documents/workspace/Engineering Challenge/src/test/resources/testdata.xlsx";
+			logger.debug("Excel file location -  src/test/resources/testdata.xlsx");
+			String excelFilePath = "src/test/resources/testdata.xlsx";
 
 			inputStream = new FileInputStream(new File(excelFilePath));
 
-			System.out.println("inputStream=" + inputStream);
-
-			try {
-				workbook = new XSSFWorkbook(inputStream);
-			} catch (Exception ee) {
-				System.out.println("error-" + ee);
-			}
-
-			System.out.println(workbook);
+			
+			workbook = new XSSFWorkbook(inputStream);
+			
 			Sheet firstSheet = workbook.getSheetAt(0);
 			Iterator<Row> iterator = firstSheet.iterator();
 
@@ -136,8 +164,7 @@ public class Helper {
 			}
 
 		} catch (Exception e) {
-			System.out.println("Error: " + e);
-			e.printStackTrace();
+			logger.error("Excel file loading Error-" + e);
 
 		} finally {
 			workbook.close();
@@ -148,6 +175,9 @@ public class Helper {
 
 	}
 
+	/*
+	 * load the header line from test data excel for keys
+	 */
 	private List<String> populaterHeaderList(Iterator<Row> iterator) {
 		List<String> headerList = new ArrayList<String>();
 		if (iterator.hasNext()) {

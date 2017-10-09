@@ -3,9 +3,17 @@ Project Name: QaEngChallenge
 
 Regression Test Cases for State Tax Feature.
 
+
+-----------------
+OVERVIEW
+-----------------
+
 This test source code runs the test for jungle socks application. 
 It mainly covers the test for newly added feature to the application which adds the state tax to 
-customers total amount and verifies that application is calculating correct state tax. 
+customers total amount and verifies that application is calculating correct state tax.
+
+It is setup as a parameterized junit test with a test suite class.
+Test case iterates over the test data (each row is one test) from the test data excel file. 
 ------------------
 SOURCE CODE
 ------------------
@@ -38,7 +46,11 @@ locator.properties file includes: 1. Xpaths for all the webelements
 --------------------
 BUILD INSTRUCTION
 --------------------
-This is a maven project. You can run the test using below command on command line:
+
+1. For chrome driver path - code first checks if there is any System property set for webdriver.chrome.driver
+   If not, it tries to get the property from locator.properties file.
+
+This is a maven project with test suite class. You can run the test using below command on command line:
 
                        mvn clean test -Dtest=TaxesTestSuite.java
 
