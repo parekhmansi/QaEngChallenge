@@ -5,19 +5,12 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 
-@Suite.SuiteClasses({
-	   TaxesTests.class
-	   
-	})
+@Suite.SuiteClasses({ 
+	TaxesTestsSuccessScenarios.class, 
+	TaxesTestsFailScenarios.class
+
+})
 
 public class TaxesTestSuite {
 
 }
-
-
-
-
-
-
-
- 

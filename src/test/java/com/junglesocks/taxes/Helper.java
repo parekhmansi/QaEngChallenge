@@ -6,10 +6,11 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +24,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +59,6 @@ public class Helper {
 	 */
 	public WebElement findElement(String key) throws IOException {
 
-		Properties prop = loadProperties();
 		String xpath = prop.getProperty(key);
 		logger.debug("XPATH value for :" + key + "=" + xpath);
 
@@ -78,7 +79,7 @@ public class Helper {
 		driver = new ChromeDriver();
 
 		// set implicit wait to make the test visible while run.
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		//driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 		return driver;
 
 	}
@@ -118,15 +119,15 @@ public class Helper {
 	 * 
 	 * @return - List<Map<String, String>>
 	 */
-	public List<Map<String, String>> loadExcelData() throws IOException {
+	public List<Map<String, String>> loadExcelData(String fileName) throws Exception {
 
 		Workbook workbook = null;
 		FileInputStream inputStream = null;
 		List<Map<String, String>> excelData = null;
 
 		try {
-			logger.debug("Excel file location -  src/test/resources/testdata.xlsx");
-			String excelFilePath = "src/test/resources/testdata.xlsx";
+			logger.debug("Excel file location -  " + fileName);
+			String excelFilePath = fileName;
 
 			inputStream = new FileInputStream(new File(excelFilePath));
 
@@ -138,26 +139,33 @@ public class Helper {
 
 			List<String> headerList = populaterHeaderList(iterator);
 
+			for(String h : headerList){
+				logger.debug("header string-"+ h);
+			}
 			excelData = new ArrayList<Map<String, String>>();
 
 			while (iterator.hasNext()) {
 
-				Map<String, String> rowDataMap = new HashMap<String, String>();
+				Map<String, String> rowDataMap = new LinkedHashMap<String, String>();
 
 				Row nextRow = iterator.next();
-				Iterator<Cell> cellIterator = nextRow.cellIterator();
-				int headerCellCount = 0;
-				while (cellIterator.hasNext()) {
-					Cell cell = cellIterator.next();
-					String cellValue = null;
-					if (CellType.STRING.equals(cell.getCellTypeEnum())) {
-						cellValue = cell.getStringCellValue();
-					} else if (CellType.NUMERIC.equals(cell.getCellTypeEnum())) {
-						cellValue = Double.toString(cell.getNumericCellValue());
-					}
+				
+				//Iterator<Cell> cellIterator = nextRow.cellIterator();
+				//int headerCellCount = 0;
+				//while (cellIterator.hasNext()) {
+				for (int i = 0; i < headerList.size(); i++) {
 
-					rowDataMap.put(headerList.get(headerCellCount), cellValue);
-					headerCellCount++;
+					Cell cell = nextRow.getCell(i);
+					String cellValue = null;
+					if (cell != null) {
+						if (CellType.STRING.equals(cell.getCellTypeEnum())) {
+							cellValue = cell.getStringCellValue();
+						} else if (CellType.NUMERIC.equals(cell.getCellTypeEnum())) {
+							cellValue = Double.toString(cell.getNumericCellValue());
+						}
+					} 
+					rowDataMap.put(headerList.get(i), cellValue);
+					// headerCellCount++;
 				}
 				excelData.add(rowDataMap);
 
@@ -165,6 +173,7 @@ public class Helper {
 
 		} catch (Exception e) {
 			logger.error("Excel file loading Error-" + e);
+			throw e;
 
 		} finally {
 			workbook.close();
@@ -191,6 +200,8 @@ public class Helper {
 					cellValue = cell.getStringCellValue();
 				} else if (CellType.NUMERIC.equals(cell.getCellTypeEnum())) {
 					cellValue = Double.toString(cell.getNumericCellValue());
+				}else if (CellType.BLANK.equals(cell.getCellTypeEnum())){
+					break;
 				}
 
 				headerList.add(cellValue);
@@ -199,6 +210,58 @@ public class Helper {
 		}
 
 		return headerList;
+	}
+	
+	public int calculateTotalPriceForEachTypeOfSocks(int price, int quantity){
+		
+		int number = price * quantity;
+		return number;
+		
+	}
+
+	/**
+	 * common method to input values on first page and submit it
+	 * Can be shared by multiple tests. 
+	 * @param rowIterator
+	 * @return
+	 * @throws IOException
+	 */
+	Double submitFirstPageValues(Iterator<Entry<String, String>> rowIterator) throws IOException {
+		Double stateTaxValue = null;
+		while (rowIterator.hasNext()) {
+	
+			Entry<String, String> entry = (Entry<String, String>) rowIterator.next();
+	
+			if (entry.getKey().equalsIgnoreCase("state.tax.value") && entry.getValue() != null) {
+				stateTaxValue = new Double(entry.getValue());
+	
+			}
+	
+			// check 'webelement' prefix to find its xpath and feed into
+			// application.
+			if (entry.getKey().startsWith("webelement")) {
+	
+				WebElement element = findElement(entry.getKey());
+	
+				// check web element type and use the relevant action.
+				if (entry.getValue() != null) {
+					if ("text".equalsIgnoreCase(element.getAttribute("type"))) {
+						element.sendKeys(entry.getValue());
+					} else if ("select-one".equalsIgnoreCase(element.getAttribute("type"))) {
+						Select selectElement = new Select(element);
+						selectElement.selectByValue(entry.getValue());
+						TaxesTestsSuccessScenarios.logger.debug("State = " + entry.getValue());
+	
+					}
+				}
+	
+			}
+		}
+		logger.debug("State tax value = " + stateTaxValue);
+	
+		// click checkout button.
+		findElement("webelement.welcome.checkout.button").click();
+		return stateTaxValue;
 	}
 
 }
