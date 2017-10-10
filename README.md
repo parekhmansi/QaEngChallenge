@@ -29,11 +29,14 @@ If not, it tries to get the property from locator.properties file (which default
 
 2. locator.properties and test data files are provided as part of the project (under /src/test/resources).
 
-This is a maven project with test suite class. You can run the tests using below command on command line:
+This is a maven project with test suite class. You can run the tests using below commands on command line:
 
               mvn clean test -Dtest=TaxesTestSuite
+              mvn clean test -Dtest=TaxesTestsSuccessScenarios
+              mvn clean test -Dtest=TaxesTestsFailScenarios
 
-It will run success and fail test scenarios with 2 different test data files (provided through the locator.properties file).
+
+It will run success and /or fail test scenarios with 2 different test data files (provided through the locator.properties file).
 
 ------------------
 SOURCE CODE
